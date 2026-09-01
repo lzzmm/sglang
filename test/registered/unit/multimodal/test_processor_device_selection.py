@@ -80,10 +80,22 @@ class TestFastImageProcessorDevice(CustomTestCase):
 
 
 class TestFastImageProcessorMemoryPool(CustomTestCase):
-    def _processor(self, *, transport="cpu", precompute_hash=False):
-        processor = _make(base_gpu_id=0)
+    def _processor(
+        self,
+        *,
+        transport="cpu",
+        precompute_hash=False,
+        pool_mode=None,
+    ):
+        fields = (
+            {} if pool_mode is None else {"fast_image_processor_pool_mode": pool_mode}
+        )
+        processor = _make(base_gpu_id=0, **fields)
         processor.mm_feature_transport = transport
         processor.precompute_hash_before_cpu_transfer = precompute_hash
+        processor.fast_image_processor_pool_mode = (
+            processor.server_args.fast_image_processor_pool_mode
+        )
         return processor
 
     def test_pool_is_limited_to_immediate_cpu_transport(self):
@@ -92,6 +104,11 @@ class TestFastImageProcessorMemoryPool(CustomTestCase):
             (self._processor(transport="cuda_ipc"), "cuda:0", False),
             (self._processor(transport="cuda_vmm"), "cuda:0", False),
             (self._processor(precompute_hash=True), "cuda:0", False),
+            (
+                self._processor(pool_mode="default_allocator"),
+                "cuda:0",
+                False,
+            ),
             (self._processor(), "cpu", False),
             (self._processor(), None, False),
         )

@@ -254,6 +254,7 @@ class BaseMultimodalProcessor(ABC):
         if get_mm().disable_fast_image_processor:
             self.image_processor_backend = "pil"
         self.disable_fast_image_processor = self.image_processor_backend == "pil"
+        self.fast_image_processor_pool_mode = server_args.fast_image_processor_pool_mode
         self.skip_tokenizer_init = get_serving().skip_tokenizer_init
 
         mm_process_config = get_mm().mm_process_config
@@ -738,7 +739,8 @@ class BaseMultimodalProcessor(ABC):
     def _temporary_fast_processor_cuda_pool(self, device: Optional[str]):
         """Release fast-processor CUDA temporaries after CPU feature transport."""
         can_release = (
-            device is not None
+            self.fast_image_processor_pool_mode == "request_pool"
+            and device is not None
             and torch.device(device).type == "cuda"
             and not self.keep_mm_features_on_device
             and not self.precompute_hash_before_cpu_transfer

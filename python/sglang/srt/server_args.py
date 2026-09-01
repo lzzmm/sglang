@@ -2918,6 +2918,14 @@ class ServerArgs:
         "available backend.",
         NS("mm"),
     ] = "auto"
+    fast_image_processor_pool_mode: A[
+        Literal["request_pool", "default_allocator"],
+        "CUDA allocator used by the fast image processor when features are "
+        "transported through CPU memory. 'request_pool' releases temporary GPU "
+        "memory after each request. 'default_allocator' avoids request-scoped "
+        "pool teardown but retains the processor scratch-memory high-water mark.",
+        NS("mm"),
+    ] = "request_pool"
     mm_global_cache_backend: A[
         str,
         Arg(
